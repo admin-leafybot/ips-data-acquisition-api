@@ -10,7 +10,7 @@ Following the **LeafyBot API** pattern, with **port 90** for production instead 
 2. ✅ `docker-compose.yml` - Local development (with PostgreSQL)
 3. ✅ `docker-compose.prod.yml` - Production deployment (**port 90**)
 4. ✅ `.dockerignore` - Exclude unnecessary files
-5. ✅ `appsettings.Docker.json` - Docker environment config
+5. ✅ `appsettings.Production.json` - Docker environment config
 6. ✅ `.github/workflows/deploy.yml` - CI/CD to AWS ECR + EC2
 7. ✅ `DOCKER_DEPLOYMENT.md` - Complete documentation
 

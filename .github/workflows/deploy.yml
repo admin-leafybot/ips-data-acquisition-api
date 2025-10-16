@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           files=(
             "src/IPSDataAcquisition.Presentation/appsettings.json"
-            "src/IPSDataAcquisition.Presentation/appsettings.Docker.json"
+            "src/IPSDataAcquisition.Presentation/appsettings.Production.json"
           )
           for f in "${files[@]}"; do
             [ -f "$f" ] || continue
@@ -50,8 +50,8 @@ jobs:
               sed -i.bak -e "s#\"${t}\"#\"${esc}\"#g" "$f"
             done
           done
-          echo "Preview of updated appsettings.Docker.json:"
-          head -n 200 src/IPSDataAcquisition.Presentation/appsettings.Docker.json || true
+          echo "Preview of updated appsettings.Production.json:"
+          head -n 200 src/IPSDataAcquisition.Presentation/appsettings.Production.json || true
         shell: bash
 
       - name: Set up Docker Buildx

@@ -34,7 +34,7 @@ Production deployment:
 ### 4. .dockerignore
 Excludes unnecessary files from Docker build context
 
-### 5. appsettings.Docker.json
+### 5. appsettings.Production.json
 Docker-specific configuration with placeholders for secrets
 
 ---
@@ -156,8 +156,8 @@ Set in docker-compose or via environment:
 ASPNETCORE_ENVIRONMENT=Development
 ConnectionStrings__Default=Host=db;Port=5432;Database=ips_data_acquisition;Username=postgres;Password=postgres
 
-# Production (handled by appsettings.Docker.json)
-ASPNETCORE_ENVIRONMENT=Docker
+# Production (handled by appsettings.Production.json)
+ASPNETCORE_ENVIRONMENT=Production
 ```
 
 ### Port Mapping
