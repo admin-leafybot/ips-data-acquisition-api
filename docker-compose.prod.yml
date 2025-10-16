@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  api:
+    image: "__IMAGE_URI__"
+    container_name: ips-data-acquisition-api
+    ports:
+      - "__APP_PORT_EXTERNAL__:5000"
+    restart: unless-stopped
+
