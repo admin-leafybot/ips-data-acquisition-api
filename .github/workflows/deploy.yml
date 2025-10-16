@@ -121,6 +121,7 @@ jobs:
             aws ecr get-login-password --region ${AWS_REGION} | sudo docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
             echo "Pulling and starting via docker compose..."
+            
             mkdir -p ~/ips-data-acquisition-api
             cd ~/ips-data-acquisition-api
             sudo docker-compose -f docker-compose.prod.yml pull || true
