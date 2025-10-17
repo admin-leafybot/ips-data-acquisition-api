@@ -1,5 +1,6 @@
 using IPSDataAcquisition.Infrastructure;
 using IPSDataAcquisition.Infrastructure.Data;
+using IPSDataAcquisition.Presentation.Middleware;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -7,6 +8,15 @@ using Microsoft.OpenApi.Models;
 using AspNetCoreRateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel limits for large IMU data payloads
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB (was 4MB default)
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(60);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(120);
+    options.Limits.MinRequestBodyDataRate = null; // Disable minimum data rate
+});
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -80,6 +90,10 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Swa
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// CRITICAL: Enable GZIP request decompression for compressed IMU data uploads
+app.UseGzipRequestDecompression();
+
 app.UseIpRateLimiting();
 
 app.UseAuthorization();
