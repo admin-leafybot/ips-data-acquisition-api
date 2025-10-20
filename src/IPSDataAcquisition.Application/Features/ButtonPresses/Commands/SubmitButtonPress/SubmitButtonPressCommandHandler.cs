@@ -36,6 +36,7 @@ public class SubmitButtonPressCommandHandler : IRequestHandler<SubmitButtonPress
             SessionId = request.SessionId,
             Action = request.Action,
             Timestamp = request.Timestamp,
+            FloorIndex = request.FloorIndex,
             IsSynced = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

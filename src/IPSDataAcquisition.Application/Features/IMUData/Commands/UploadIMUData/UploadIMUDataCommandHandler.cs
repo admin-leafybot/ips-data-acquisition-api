@@ -18,6 +18,9 @@ public class UploadIMUDataCommandHandler : IRequestHandler<UploadIMUDataCommand,
 
     public async Task<UploadIMUDataResponseDto> Handle(UploadIMUDataCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Processing IMU data upload: {Count} data points for session {SessionId}", 
+            request.DataPoints.Count, request.SessionId ?? "null");
+
         var imuDataList = new List<Domain.Entities.IMUData>();
 
         foreach (var point in request.DataPoints)
@@ -26,6 +29,7 @@ public class UploadIMUDataCommandHandler : IRequestHandler<UploadIMUDataCommand,
             {
                 SessionId = request.SessionId,
                 Timestamp = point.Timestamp,
+                TimestampNanos = point.TimestampNanos,
                 // Basic calibrated sensors - all nullable
                 AccelX = point.AccelX, AccelY = point.AccelY, AccelZ = point.AccelZ,
                 GyroX = point.GyroX, GyroY = point.GyroY, GyroZ = point.GyroZ,
@@ -58,14 +62,27 @@ public class UploadIMUDataCommandHandler : IRequestHandler<UploadIMUDataCommand,
             imuDataList.Add(imuData);
         }
 
-        // Bulk insert for performance
-        await _context.IMUData.AddRangeAsync(imuDataList, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Prepared {Count} IMU data records for bulk insert", imuDataList.Count);
 
-        _logger.LogInformation("Successfully processed {Count} IMU data points for session {SessionId}",
-            imuDataList.Count, request.SessionId);
+        try
+        {
+            // Bulk insert for performance
+            await _context.IMUData.AddRangeAsync(imuDataList, cancellationToken);
+            
+            _logger.LogDebug("Calling SaveChangesAsync for {Count} IMU records", imuDataList.Count);
+            var recordsSaved = await _context.SaveChangesAsync(cancellationToken);
+            
+            _logger.LogInformation("Successfully saved {SavedCount} IMU data points to database for session {SessionId}",
+                recordsSaved, request.SessionId ?? "null");
 
-        return new UploadIMUDataResponseDto(imuDataList.Count, request.SessionId);
+            return new UploadIMUDataResponseDto(imuDataList.Count, request.SessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Database error saving {Count} IMU data points for session {SessionId}. Error: {Message}", 
+                imuDataList.Count, request.SessionId, ex.Message);
+            throw;
+        }
     }
 }
 

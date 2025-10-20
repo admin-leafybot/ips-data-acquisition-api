@@ -9,6 +9,11 @@ using AspNetCoreRateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Enhanced console logging for better error visibility
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Configure Kestrel limits for large IMU data payloads
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -87,6 +92,9 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Swa
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "IPS Data Acquisition API v1");
     });
 }
+
+// Global exception handler - MUST be first to catch all exceptions
+app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
 app.UseCors();

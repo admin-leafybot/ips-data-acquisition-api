@@ -19,17 +19,22 @@ public class GzipRequestDecompressionMiddleware
         
         if (contentEncoding.Contains("gzip", StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogDebug("Decompressing GZIP request from {Path}", context.Request.Path);
-            
             var originalBody = context.Request.Body;
             
             try
             {
+                _logger.LogInformation("Decompressing GZIP request from {Path}, Content-Length: {Length}", 
+                    context.Request.Path, context.Request.ContentLength);
+                
                 using var decompressedStream = new GZipStream(originalBody, CompressionMode.Decompress, leaveOpen: true);
                 using var memoryStream = new MemoryStream();
                 
                 await decompressedStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
+                
+                var decompressedSize = memoryStream.Length;
+                _logger.LogInformation("GZIP decompressed: {CompressedSize} bytes → {DecompressedSize} bytes", 
+                    context.Request.ContentLength, decompressedSize);
                 
                 context.Request.Body = memoryStream;
                 context.Request.Headers.Remove("Content-Encoding");
@@ -39,13 +44,20 @@ public class GzipRequestDecompressionMiddleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to decompress GZIP request");
+                _logger.LogError(ex, "Failed to decompress GZIP request from {Path}. Error: {Error}", 
+                    context.Request.Path, ex.Message);
+                
                 context.Response.StatusCode = 400;
                 await context.Response.WriteAsJsonAsync(new
                 {
                     success = false,
-                    message = "Failed to decompress request. Invalid GZIP data.",
-                    data = (object?)null
+                    message = $"Failed to decompress request: {ex.Message}",
+                    data = (object?)null,
+                    error = new
+                    {
+                        type = ex.GetType().Name,
+                        details = ex.ToString()
+                    }
                 });
             }
             finally

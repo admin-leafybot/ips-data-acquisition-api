@@ -4,6 +4,7 @@ public record UploadIMUDataRequestDto(string? SessionId, List<IMUDataPointDto> D
 
 public record IMUDataPointDto(
     long Timestamp,
+    long? TimestampNanos,
     // Calibrated - All nullable since not all devices have all sensors
     float? AccelX, float? AccelY, float? AccelZ,
     float? GyroX, float? GyroY, float? GyroZ,

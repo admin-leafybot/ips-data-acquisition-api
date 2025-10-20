@@ -12,10 +12,12 @@ namespace IPSDataAcquisition.Presentation.Controllers;
 public class SessionsController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly ILogger<SessionsController> _logger;
 
-    public SessionsController(ISender sender)
+    public SessionsController(ISender sender, ILogger<SessionsController> logger)
     {
         _sender = sender;
+        _logger = logger;
     }
 
     [HttpPost("create")]
@@ -24,9 +26,14 @@ public class SessionsController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Creating session: {SessionId} at timestamp {Timestamp}", 
+                request.SessionId, request.Timestamp);
+
             var result = await _sender.Send(
                 new CreateSessionCommand(request.SessionId, request.Timestamp), 
                 cancellationToken);
+
+            _logger.LogInformation("Session created successfully: {SessionId}", request.SessionId);
 
             return Ok(new ApiResponse<CreateSessionResponseDto>
             {
@@ -37,12 +44,20 @@ public class SessionsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning(ex, "Failed to create session {SessionId}: {Message}", 
+                request.SessionId, ex.Message);
+            
             return Conflict(new ApiResponse<CreateSessionResponseDto>
             {
                 Success = false,
                 Message = ex.Message,
                 Data = null
             });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error creating session {SessionId}", request.SessionId);
+            throw;
         }
     }
 

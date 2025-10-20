@@ -26,13 +26,19 @@ public class IMUDataController : ControllerBase
     {
         try
         {
+            var contentLength = Request.ContentLength ?? 0;
+            var contentEncoding = Request.Headers["Content-Encoding"].ToString();
+            
             _logger.LogInformation(
-                "Received IMU data upload: {PointCount} points for session {SessionId}", 
+                "IMU Upload Request - Points: {PointCount}, Session: {SessionId}, ContentLength: {Length} bytes, Encoding: {Encoding}", 
                 request.DataPoints?.Count ?? 0, 
-                request.SessionId);
+                request.SessionId ?? "null",
+                contentLength,
+                string.IsNullOrEmpty(contentEncoding) ? "none" : contentEncoding);
 
             if (request.DataPoints == null || request.DataPoints.Count == 0)
             {
+                _logger.LogWarning("IMU upload rejected - no data points provided");
                 return BadRequest(new ApiResponse<UploadIMUDataResponseDto>
                 {
                     Success = false,
@@ -41,9 +47,18 @@ public class IMUDataController : ControllerBase
                 });
             }
 
+            // Log sample of first data point for debugging
+            var firstPoint = request.DataPoints.First();
+            _logger.LogDebug(
+                "First IMU point - Timestamp: {Timestamp}, AccelX: {AccelX}, GyroX: {GyroX}, MagX: {MagX}",
+                firstPoint.Timestamp, firstPoint.AccelX, firstPoint.GyroX, firstPoint.MagX);
+
             var result = await _sender.Send(
                 new UploadIMUDataCommand(request.SessionId, request.DataPoints),
                 cancellationToken);
+
+            _logger.LogInformation("IMU data upload SUCCESS - {Count} points saved for session {SessionId}", 
+                result.PointsReceived, result.SessionId ?? "null");
 
             return Ok(new ApiResponse<UploadIMUDataResponseDto>
             {
@@ -54,7 +69,14 @@ public class IMUDataController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading IMU data for session {SessionId}", request.SessionId);
+            _logger.LogError(ex, 
+                "IMU Upload FAILED - Session: {SessionId}, Points: {Count}, Error Type: {ErrorType}, Message: {Message}, StackTrace: {StackTrace}", 
+                request.SessionId ?? "null",
+                request.DataPoints?.Count ?? 0,
+                ex.GetType().Name,
+                ex.Message,
+                ex.StackTrace);
+            
             return StatusCode(500, new ApiResponse<UploadIMUDataResponseDto>
             {
                 Success = false,

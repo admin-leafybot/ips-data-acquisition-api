@@ -10,10 +10,12 @@ namespace IPSDataAcquisition.Presentation.Controllers;
 public class ButtonPressesController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly ILogger<ButtonPressesController> _logger;
 
-    public ButtonPressesController(ISender sender)
+    public ButtonPressesController(ISender sender, ILogger<ButtonPressesController> logger)
     {
         _sender = sender;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -22,8 +24,11 @@ public class ButtonPressesController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Button press: {Action} for session {SessionId} at {Timestamp}", 
+                request.Action, request.SessionId, request.Timestamp);
+
             await _sender.Send(
-                new SubmitButtonPressCommand(request.SessionId, request.Action, request.Timestamp),
+                new SubmitButtonPressCommand(request.SessionId, request.Action, request.Timestamp, request.FloorIndex),
                 cancellationToken);
 
             return Ok(new ApiResponse<object>
@@ -35,6 +40,8 @@ public class ButtonPressesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning(ex, "Invalid button press action: {Action}", request.Action);
+            
             return BadRequest(new ApiResponse<object>
             {
                 Success = false,
@@ -44,12 +51,20 @@ public class ButtonPressesController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
+            _logger.LogWarning(ex, "Session not found: {SessionId}", request.SessionId);
+            
             return NotFound(new ApiResponse<object>
             {
                 Success = false,
                 Message = ex.Message,
                 Data = null
             });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error submitting button press for session {SessionId}", 
+                request.SessionId);
+            throw;
         }
     }
 }

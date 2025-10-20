@@ -7,6 +7,7 @@ public class IMUData : BaseEntity
     public string? SessionId { get; set; }
     public string? UserId { get; set; }
     public long Timestamp { get; set; }
+    public long? TimestampNanos { get; set; }
 
     // Calibrated Motion Sensors (15 fields) - All nullable since not all devices have all sensors
     public float? AccelX { get; set; }
