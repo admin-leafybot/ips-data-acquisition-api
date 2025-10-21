@@ -6,6 +6,8 @@ public record CreateSessionResponseDto(string SessionId, long CreatedAt);
 
 public record CloseSessionRequestDto(string SessionId, long EndTimestamp);
 
+public record CancelSessionRequestDto(string SessionId);
+
 public record SessionListResponseDto(
     string SessionId,
     long StartTimestamp,

@@ -1,6 +1,7 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.Sessions.Commands.CreateSession;
 using IPSDataAcquisition.Application.Features.Sessions.Commands.CloseSession;
+using IPSDataAcquisition.Application.Features.Sessions.Commands.CancelSession;
 using IPSDataAcquisition.Application.Features.Sessions.Queries.GetSessions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -97,6 +98,57 @@ public class SessionsController : ControllerBase
                 Message = ex.Message,
                 Data = null
             });
+        }
+    }
+
+    [HttpPost("cancel")]
+    public async Task<ActionResult<ApiResponse<object>>> CancelSession(
+        [FromBody] CancelSessionRequestDto request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("Cancelling session: {SessionId}", request.SessionId);
+
+            await _sender.Send(
+                new CancelSessionCommand(request.SessionId),
+                cancellationToken);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Session cancelled successfully",
+                Data = null
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Session not found for cancellation: {SessionId}", request.SessionId);
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized session cancellation attempt: {SessionId}", request.SessionId);
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Cannot cancel session {SessionId}: {Message}", request.SessionId, ex.Message);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cancelling session {SessionId}", request.SessionId);
+            throw;
         }
     }
 

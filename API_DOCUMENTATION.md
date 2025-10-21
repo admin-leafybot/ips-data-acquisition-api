@@ -358,7 +358,74 @@ Content-Type: application/json
 
 ---
 
-### 7. Get Sessions
+### 7. Cancel Session
+
+**POST** `/sessions/cancel`
+
+Cancel an active session. Sets status to `rejected` and adds "Cancelled by user" remark.
+
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "sessionId": "session-2024-10-21-001"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Session cancelled successfully",
+  "data": null
+}
+```
+
+**Response (Session Not Found):**
+```json
+{
+  "success": false,
+  "message": "Session with ID session-2024-10-21-001 not found",
+  "data": null
+}
+```
+
+**Response (Unauthorized - Not Your Session):**
+```
+Status: 403 Forbidden
+```
+
+**Response (Cannot Cancel - Already Completed):**
+```json
+{
+  "success": false,
+  "message": "Cannot cancel session with status: completed",
+  "data": null
+}
+```
+
+**Status Codes:**
+- `200 OK` - Session cancelled
+- `401 Unauthorized` - Authentication required
+- `403 Forbidden` - Attempting to cancel another user's session
+- `404 Not Found` - Session doesn't exist
+- `400 Bad Request` - Session already in final state (completed/approved/rejected)
+
+**Notes:**
+- Only the session owner can cancel their own session
+- Can only cancel sessions with `in_progress` status
+- Session status is set to `rejected`
+- `endTimestamp` is automatically set to current time
+- Remarks field is set to "Cancelled by user"
+
+---
+
+### 8. Get Sessions
 
 **GET** `/sessions?page=1&limit=50`
 
@@ -414,7 +481,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 🔒 **Authentication Required**
 
-### 8. Submit Button Press
+### 9. Submit Button Press
 
 **POST** `/button-presses`
 
@@ -502,7 +569,7 @@ Content-Type: application/json
 
 🔒 **Authentication Required**
 
-### 9. Upload IMU Data
+### 10. Upload IMU Data
 
 **POST** `/imu-data/upload`
 
@@ -657,7 +724,7 @@ curl -X POST https://api.yourdomain.com/api/v1/imu-data/upload \
 
 🔒 **Authentication Required**
 
-### 10. Get Bonuses
+### 11. Get Bonuses
 
 **GET** `/bonuses?start_date=2024-10-01&end_date=2024-10-31`
 
@@ -870,14 +937,23 @@ curl -X POST https://api.yourdomain.com/api/v1/imu-data/upload \
   --data-binary @imu_data.json.gz
 ```
 
-#### Step 7: Close Session
+#### Step 7: Close Session (or Cancel)
 ```bash
+# Option A: Close session normally
 curl -X POST https://api.yourdomain.com/api/v1/sessions/close \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "sessionId": "delivery-001",
     "endTimestamp": 1729501200000
+  }'
+
+# Option B: Cancel session
+curl -X POST https://api.yourdomain.com/api/v1/sessions/cancel \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "delivery-001"
   }'
 ```
 
