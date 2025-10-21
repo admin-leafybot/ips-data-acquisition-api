@@ -26,6 +26,7 @@ public static class ButtonAction
     public const string LeftRestaurant = "LEFT_RESTAURANT";
     public const string ComingDownStairs = "COMING_DOWN_STAIRS";
     public const string LeftRestaurantBuilding = "LEFT_RESTAURANT_BUILDING";
+    public const string ReachedSocietyGate = "REACHED_SOCIETY_GATE";
     public const string EnteredDeliveryBuilding = "ENTERED_DELIVERY_BUILDING";
     public const string ReachedDeliveryCorridor = "REACHED_DELIVERY_CORRIDOR";
     public const string ReachedDoorstep = "REACHED_DOORSTEP";
@@ -38,8 +39,8 @@ public static class ButtonAction
         EnteredRestaurantBuilding, EnteredElevator, ClimbingStairs,
         GoingUpInLift, ReachedRestaurantCorridor, ReachedRestaurant,
         LeftRestaurant, ComingDownStairs, LeftRestaurantBuilding,
-        EnteredDeliveryBuilding, ReachedDeliveryCorridor, ReachedDoorstep,
-        LeftDoorstep, GoingDownInLift, LeftDeliveryBuilding
+        ReachedSocietyGate, EnteredDeliveryBuilding, ReachedDeliveryCorridor, 
+        ReachedDoorstep, LeftDoorstep, GoingDownInLift, LeftDeliveryBuilding
     };
 }
 
