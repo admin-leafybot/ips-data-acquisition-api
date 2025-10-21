@@ -2,16 +2,19 @@ using IPSDataAcquisition.Application.Common.Interfaces;
 using IPSDataAcquisition.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace IPSDataAcquisition.Application.Features.ButtonPresses.Commands.SubmitButtonPress;
 
 public class SubmitButtonPressCommandHandler : IRequestHandler<SubmitButtonPressCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILogger<SubmitButtonPressCommandHandler> _logger;
 
-    public SubmitButtonPressCommandHandler(IApplicationDbContext context)
+    public SubmitButtonPressCommandHandler(IApplicationDbContext context, ILogger<SubmitButtonPressCommandHandler> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<bool> Handle(SubmitButtonPressCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,9 @@ public class SubmitButtonPressCommandHandler : IRequestHandler<SubmitButtonPress
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        _logger.LogInformation("Saving button press with FloorIndex: {FloorIndex} for session {SessionId}", 
+            request.FloorIndex, request.SessionId);
 
         _context.ButtonPresses.Add(buttonPress);
         await _context.SaveChangesAsync(cancellationToken);

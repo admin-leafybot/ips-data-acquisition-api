@@ -24,8 +24,8 @@ public class ButtonPressesController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Button press: {Action} for session {SessionId} at {Timestamp}", 
-                request.Action, request.SessionId, request.Timestamp);
+            _logger.LogInformation("Button press: {Action} for session {SessionId} at {Timestamp}, FloorIndex: {FloorIndex}", 
+                request.Action, request.SessionId, request.Timestamp, request.FloorIndex);
 
             await _sender.Send(
                 new SubmitButtonPressCommand(request.SessionId, request.Action, request.Timestamp, request.FloorIndex),

@@ -1,5 +1,6 @@
 using IPSDataAcquisition.Application.Common.Interfaces;
 using IPSDataAcquisition.Infrastructure.Data;
+using IPSDataAcquisition.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,9 @@ public static class DependencyInjection
             .UseSnakeCaseNamingConvention());
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        
+        // Services
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

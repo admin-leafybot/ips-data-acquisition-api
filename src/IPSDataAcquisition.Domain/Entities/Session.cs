@@ -15,6 +15,7 @@ public class Session
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
+    public virtual ApplicationUser? User { get; set; }
     public virtual ICollection<ButtonPress> ButtonPresses { get; set; } = new List<ButtonPress>();
     public virtual ICollection<IMUData> IMUDataPoints { get; set; } = new List<IMUData>();
 }

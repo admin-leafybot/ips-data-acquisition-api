@@ -1,10 +1,11 @@
 using IPSDataAcquisition.Application.Common.Interfaces;
 using IPSDataAcquisition.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace IPSDataAcquisition.Infrastructure.Data;
 
-public class ApplicationDbContext : DbContext, IApplicationDbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -20,6 +21,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // ApplicationUser configuration
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.ToTable("users");
+            entity.Property(e => e.FullName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20).IsRequired();
+            entity.HasIndex(e => e.PhoneNumber).IsUnique();
+        });
+
         // Session configuration
         modelBuilder.Entity<Session>(entity =>
         {
@@ -34,6 +44,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.StartTimestamp);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Sessions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ButtonPress configuration
@@ -53,6 +68,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(s => s.ButtonPresses)
                 .HasForeignKey(e => e.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<ApplicationUser>()
+                .WithMany(u => u.ButtonPresses)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // IMUData configuration
@@ -73,6 +93,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(s => s.IMUDataPoints)
                 .HasForeignKey(e => e.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<ApplicationUser>()
+                .WithMany(u => u.IMUDataRecords)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Bonus configuration
