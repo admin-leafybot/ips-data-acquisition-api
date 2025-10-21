@@ -8,11 +8,13 @@ namespace IPSDataAcquisition.Application.Features.IMUData.Commands.UploadIMUData
 public class UploadIMUDataCommandHandler : IRequestHandler<UploadIMUDataCommand, UploadIMUDataResponseDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<UploadIMUDataCommandHandler> _logger;
 
-    public UploadIMUDataCommandHandler(IApplicationDbContext context, ILogger<UploadIMUDataCommandHandler> logger)
+    public UploadIMUDataCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService, ILogger<UploadIMUDataCommandHandler> logger)
     {
         _context = context;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -28,6 +30,7 @@ public class UploadIMUDataCommandHandler : IRequestHandler<UploadIMUDataCommand,
             var imuData = new Domain.Entities.IMUData
             {
                 SessionId = request.SessionId,
+                UserId = _currentUserService.UserId,
                 Timestamp = point.Timestamp,
                 TimestampNanos = point.TimestampNanos,
                 // Basic calibrated sensors - all nullable

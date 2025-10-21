@@ -9,11 +9,13 @@ namespace IPSDataAcquisition.Application.Features.ButtonPresses.Commands.SubmitB
 public class SubmitButtonPressCommandHandler : IRequestHandler<SubmitButtonPressCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<SubmitButtonPressCommandHandler> _logger;
 
-    public SubmitButtonPressCommandHandler(IApplicationDbContext context, ILogger<SubmitButtonPressCommandHandler> logger)
+    public SubmitButtonPressCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService, ILogger<SubmitButtonPressCommandHandler> logger)
     {
         _context = context;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -37,6 +39,7 @@ public class SubmitButtonPressCommandHandler : IRequestHandler<SubmitButtonPress
         var buttonPress = new ButtonPress
         {
             SessionId = request.SessionId,
+            UserId = _currentUserService.UserId,
             Action = request.Action,
             Timestamp = request.Timestamp,
             FloorIndex = request.FloorIndex,

@@ -1,12 +1,14 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.ButtonPresses.Commands.SubmitButtonPress;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IPSDataAcquisition.Presentation.Controllers;
 
 [ApiController]
 [Route("api/v1/button-presses")]
+[Authorize]
 public class ButtonPressesController : ControllerBase
 {
     private readonly ISender _sender;

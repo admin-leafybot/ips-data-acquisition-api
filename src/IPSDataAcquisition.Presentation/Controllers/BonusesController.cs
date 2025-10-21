@@ -1,12 +1,14 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.Bonuses.Queries.GetBonuses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IPSDataAcquisition.Presentation.Controllers;
 
 [ApiController]
 [Route("api/v1/bonuses")]
+[Authorize]
 public class BonusesController : ControllerBase
 {
     private readonly ISender _sender;

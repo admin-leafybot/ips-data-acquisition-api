@@ -3,12 +3,14 @@ using IPSDataAcquisition.Application.Features.Sessions.Commands.CreateSession;
 using IPSDataAcquisition.Application.Features.Sessions.Commands.CloseSession;
 using IPSDataAcquisition.Application.Features.Sessions.Queries.GetSessions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IPSDataAcquisition.Presentation.Controllers;
 
 [ApiController]
 [Route("api/v1/sessions")]
+[Authorize]
 public class SessionsController : ControllerBase
 {
     private readonly ISender _sender;

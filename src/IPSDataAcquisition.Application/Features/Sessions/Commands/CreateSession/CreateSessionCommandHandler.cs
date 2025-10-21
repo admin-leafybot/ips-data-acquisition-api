@@ -9,10 +9,12 @@ namespace IPSDataAcquisition.Application.Features.Sessions.Commands.CreateSessio
 public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand, CreateSessionResponseDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateSessionCommandHandler(IApplicationDbContext context)
+    public CreateSessionCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public async Task<CreateSessionResponseDto> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
@@ -29,6 +31,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         var session = new Session
         {
             SessionId = request.SessionId,
+            UserId = _currentUserService.UserId,
             StartTimestamp = request.Timestamp,
             Status = SessionStatus.InProgress,
             PaymentStatus = PaymentStatusEnum.Unpaid,

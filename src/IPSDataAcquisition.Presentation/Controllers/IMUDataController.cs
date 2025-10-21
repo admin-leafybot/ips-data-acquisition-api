@@ -1,12 +1,14 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.IMUData.Commands.UploadIMUData;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IPSDataAcquisition.Presentation.Controllers;
 
 [ApiController]
 [Route("api/v1/imu-data")]
+[Authorize]
 public class IMUDataController : ControllerBase
 {
     private readonly ISender _sender;
