@@ -1,393 +1,254 @@
 # IPS Data Acquisition API
 
-Backend API for IPS Indoor Positioning Data Collection Mobile App built with .NET 8 and Clean Architecture.
+A high-performance backend API for Indoor Positioning System (IPS) data collection from mobile applications. Built with .NET 9, PostgreSQL, and Clean Architecture principles.
 
-## 🏗️ Architecture
+## 🚀 Quick Start
 
-This project follows **Clean Architecture** principles with clear separation of concerns:
+### Prerequisites
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [PostgreSQL 15+](https://www.postgresql.org/download/)
+- [Docker](https://www.docker.com/get-started) (optional, for containerized deployment)
+
+### Local Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ips-data-acquisition-api
+   ```
+
+2. **Update connection string**
+   
+   Edit `src/IPSDataAcquisition.Presentation/appsettings.json`:
+   ```json
+   {
+     "ConnectionStrings": {
+       "Default": "Host=localhost;Port=5432;Database=ips_data;Username=postgres;Password=yourpassword"
+     }
+   }
+   ```
+
+3. **Run database migrations**
+   ```bash
+   dotnet ef database update --project src/IPSDataAcquisition.Infrastructure --startup-project src/IPSDataAcquisition.Presentation
+   ```
+
+4. **Build and run**
+   ```bash
+   dotnet build IPSDataAcquisition.sln
+   dotnet run --project src/IPSDataAcquisition.Presentation
+   ```
+
+5. **Access Swagger UI**
+   ```
+   http://localhost:5000/swagger
+   ```
+
+### Using Docker
+
+```bash
+# Development
+docker-compose up -d
+
+# Production
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 📋 Features
+
+- ✅ **User Authentication** - JWT-based authentication with refresh tokens
+- ✅ **Session Management** - Track user delivery sessions
+- ✅ **Button Press Tracking** - Record user actions during delivery
+- ✅ **IMU Data Collection** - High-volume sensor data ingestion (up to 100Hz)
+- ✅ **Bonus Management** - User bonus tracking and retrieval
+- ✅ **GZIP Compression** - Automatic decompression for large payloads
+- ✅ **Rate Limiting** - Prevent API abuse
+- ✅ **Clean Architecture** - Separation of concerns with CQRS pattern
+- ✅ **Validation** - FluentValidation for all inputs
+- ✅ **Logging** - Comprehensive structured logging
+
+## 🏗️ Project Structure
 
 ```
-IPSDataAcquisition/
-├── Domain/              # Enterprise business rules (Entities, Value Objects)
-├── Application/         # Application business rules (Features, DTOs, Interfaces)
-├── Infrastructure/      # External concerns (Database, Services)
-└── Presentation/        # API Controllers, Entry point
+ips-data-acquisition-api/
+├── src/
+│   ├── IPSDataAcquisition.Domain/          # Entities & Domain Logic
+│   ├── IPSDataAcquisition.Application/     # Business Logic & Commands
+│   ├── IPSDataAcquisition.Infrastructure/  # Data Access & External Services
+│   └── IPSDataAcquisition.Presentation/    # API Controllers & Middleware
+├── ARCHITECTURE.md                          # Architecture documentation
+├── API_DOCUMENTATION.md                     # API endpoints documentation
+├── AWS_DEPLOYMENT.md                        # Production deployment guide
+└── README.md                                # This file
 ```
 
-### Key Technologies
+## 🔑 Key Technologies
 
-- **.NET 8.0** - Modern C# with minimal APIs
-- **Entity Framework Core** - ORM with PostgreSQL
+- **.NET 9** - High-performance web framework
+- **PostgreSQL** - Relational database with excellent JSON support
+- **Entity Framework Core 9** - ORM with Code-First migrations
 - **MediatR** - CQRS pattern implementation
-- **FluentValidation** - Request validation
+- **FluentValidation** - Input validation
+- **ASP.NET Core Identity** - User authentication
+- **JWT Bearer** - Token-based authentication
 - **Swagger/OpenAPI** - API documentation
-- **AspNetCoreRateLimit** - Rate limiting
 
-## 📋 Prerequisites
+## 📦 Database Migrations
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [PostgreSQL 14+](https://www.postgresql.org/download/)
-- IDE: Visual Studio 2022, VS Code, or Rider
+### Create a new migration
+```bash
+dotnet ef migrations add MigrationName --project src/IPSDataAcquisition.Infrastructure --startup-project src/IPSDataAcquisition.Presentation
+```
 
-## 🚀 Getting Started
+### Apply migrations
+```bash
+dotnet ef database update --project src/IPSDataAcquisition.Infrastructure --startup-project src/IPSDataAcquisition.Presentation
+```
 
-### 1. Clone the Repository
+### Remove last migration
+```bash
+dotnet ef migrations remove --project src/IPSDataAcquisition.Infrastructure --startup-project src/IPSDataAcquisition.Presentation
+```
+
+## 🔧 Configuration
+
+### Required Settings
+
+**Development** (`appsettings.json`):
+- Database connection string
+- JWT secret key (min 32 characters)
+- Admin verification key
+- Rate limiting rules
+
+**Production** (`appsettings.Production.json`):
+- Uses placeholder tokens: `__DB_CONNECTION_STRING__`, `__JWT_SECRET_KEY__`, `__ADMIN_VERIFICATION_KEY__`
+- Replaced during CI/CD deployment from GitHub Secrets
+
+### Environment Variables (Docker)
 
 ```bash
-cd ips-data-acquisition-api
+DATABASE_CONNECTION_STRING="Host=db;Port=5432;Database=ips_data;Username=postgres;Password=yourpassword"
+JWT_SECRET_KEY="Your64CharacterSecretKeyHere"
+ADMIN_VERIFICATION_KEY="YourAdminSecurityKey"
 ```
 
-### 2. Update Database Connection String
+## 🧪 Testing the API
 
-Edit `src/IPSDataAcquisition.Presentation/appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Host=localhost;Port=5432;Database=ips_data_acquisition;Username=your_user;Password=your_password"
-  }
-}
-```
-
-### 3. Create Database
-
+### 1. Sign Up a User
 ```bash
-# Create PostgreSQL database
-createdb ips_data_acquisition
-
-# Or using psql
-psql -U postgres
-CREATE DATABASE ips_data_acquisition;
-```
-
-### 4. Run Migrations
-
-```bash
-cd src/IPSDataAcquisition.Presentation
-dotnet ef migrations add InitialCreate --project ../IPSDataAcquisition.Infrastructure
-dotnet ef database update --project ../IPSDataAcquisition.Infrastructure
-```
-
-### 5. Run the Application
-
-```bash
-dotnet run --project src/IPSDataAcquisition.Presentation
-```
-
-The API will be available at:
-- HTTP: `http://localhost:5000`
-- HTTPS: `https://localhost:5001`
-- Swagger UI: `https://localhost:5001/swagger`
-
-## 📡 API Endpoints
-
-### Base URL
-```
-https://your-domain.com/api/v1/
-```
-
-### Sessions
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/sessions/create` | Create a new session |
-| POST | `/sessions/close` | Close an existing session |
-| GET | `/sessions?page=1&limit=50` | Get list of sessions |
-
-### Button Presses
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/button-presses` | Submit a button press (waypoint) |
-
-### IMU Data
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/imu-data/upload` | Upload batch of IMU sensor data |
-
-### Bonuses
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/bonuses?start_date=2024-10-01&end_date=2024-10-31` | Get daily bonuses |
-
-## 📝 Example Requests
-
-### Create Session
-
-```bash
-curl -X POST https://localhost:5001/api/v1/sessions/create \
+curl -X POST http://localhost:5000/api/v1/user/signup \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "timestamp": 1697587200000
+    "phone": "1234567890",
+    "password": "Password123",
+    "fullName": "John Doe"
   }'
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "message": "Session created successfully",
-  "data": {
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "created_at": 1697587200000
-  }
-}
-```
-
-### Submit Button Press
-
+### 2. Activate User Account (Admin only)
 ```bash
-curl -X POST https://localhost:5001/api/v1/button-presses \
+curl -X POST http://localhost:5000/api/v1/user/ChangeVerificationStatus \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "action": "ENTERED_RESTAURANT_BUILDING",
-    "timestamp": 1697587210000
+    "phone": "1234567890",
+    "status": true,
+    "securityKey": "AdminSecureKey123!ChangeThisInProduction"
   }'
 ```
 
-### Upload IMU Data
-
+### 3. Login
 ```bash
-curl -X POST https://localhost:5001/api/v1/imu-data/upload \
+curl -X POST http://localhost:5000/api/v1/user/login \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "data_points": [{
-      "timestamp": 1697587210100,
-      "accel_x": 0.123, "accel_y": 0.456, "accel_z": 9.789,
-      "gyro_x": 0.012, "gyro_y": 0.034, "gyro_z": 0.056,
-      "mag_x": 23.4, "mag_y": 12.5, "mag_z": 45.6
-    }]
+    "phone": "1234567890",
+    "password": "Password123"
   }'
 ```
 
-## 🗂️ Project Structure
-
-```
-src/
-├── IPSDataAcquisition.Domain/
-│   ├── Common/
-│   │   └── BaseEntity.cs
-│   └── Entities/
-│       ├── Session.cs
-│       ├── ButtonPress.cs
-│       ├── IMUData.cs (61 sensor parameters!)
-│       └── Bonus.cs
-│
-├── IPSDataAcquisition.Application/
-│   ├── Common/
-│   │   ├── DTOs/
-│   │   └── Interfaces/
-│   └── Features/
-│       ├── Sessions/
-│       │   ├── Commands/ (CreateSession, CloseSession)
-│       │   ├── Queries/ (GetSessions)
-│       │   └── Validation/
-│       ├── ButtonPresses/
-│       ├── IMUData/
-│       └── Bonuses/
-│
-├── IPSDataAcquisition.Infrastructure/
-│   ├── Data/
-│   │   └── ApplicationDbContext.cs
-│   └── DependencyInjection.cs
-│
-└── IPSDataAcquisition.Presentation/
-    ├── Controllers/
-    │   ├── SessionsController.cs
-    │   ├── ButtonPressesController.cs
-    │   ├── IMUDataController.cs
-    │   └── BonusesController.cs
-    ├── Program.cs
-    └── appsettings.json
-```
-
-## 🗄️ Database Schema
-
-### Sessions Table
-```sql
-CREATE TABLE sessions (
-    session_id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36),
-    start_timestamp BIGINT NOT NULL,
-    end_timestamp BIGINT,
-    is_synced BOOLEAN DEFAULT TRUE,
-    status VARCHAR(20) DEFAULT 'in_progress',
-    payment_status VARCHAR(20) DEFAULT 'unpaid',
-    remarks TEXT,
-    bonus_amount DECIMAL(10,2),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### Button Presses Table
-```sql
-CREATE TABLE button_presses (
-    id BIGSERIAL PRIMARY KEY,
-    session_id VARCHAR(36) REFERENCES sessions(session_id) ON DELETE CASCADE,
-    action VARCHAR(50) NOT NULL,
-    timestamp BIGINT NOT NULL,
-    is_synced BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### IMU Data Table
-```sql
-CREATE TABLE imu_data (
-    id BIGSERIAL PRIMARY KEY,
-    session_id VARCHAR(36) REFERENCES sessions(session_id) ON DELETE CASCADE,
-    timestamp BIGINT NOT NULL,
-    -- 61 sensor parameters (accel_x, accel_y, gyro_x, mag_x, etc.)
-    ...
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-## ⚙️ Configuration
-
-### Rate Limiting
-
-Configured in `appsettings.json`:
-
-```json
-{
-  "IpRateLimiting": {
-    "GeneralRules": [
-      {
-        "Endpoint": "POST:/api/v1/button-presses",
-        "Period": "1m",
-        "Limit": 60
-      },
-      {
-        "Endpoint": "POST:/api/v1/imu-data/upload",
-        "Period": "1m",
-        "Limit": 10
-      }
-    ]
-  }
-}
-```
-
-### Swagger
-
-Enable/disable Swagger in `appsettings.json`:
-
-```json
-{
-  "Swagger": {
-    "Enabled": true
-  }
-}
-```
-
-## 🧪 Testing
-
-### Using Swagger UI
-
-1. Navigate to `https://localhost:5001/swagger`
-2. Expand an endpoint
-3. Click "Try it out"
-4. Fill in the request body
-5. Click "Execute"
-
-### Using cURL
-
-See example requests above.
-
-## 📦 Building for Production
-
+### 4. Create Session (with JWT token)
 ```bash
-# Restore dependencies
-dotnet restore
-
-# Build
-dotnet build --configuration Release
-
-# Publish
-dotnet publish src/IPSDataAcquisition.Presentation -c Release -o ./publish
+curl -X POST http://localhost:5000/api/v1/sessions/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "sessionId": "session-123",
+    "timestamp": 1697890000000
+  }'
 ```
 
-## 🐳 Docker Deployment (Optional)
+## 📊 Performance Characteristics
 
-Create `Dockerfile`:
+- **IMU Data Upload**: Handles 1000+ data points per request
+- **GZIP Compression**: Reduces payload size by ~90%
+- **Bulk Insert**: Optimized for high-throughput sensor data
+- **Connection Pooling**: Efficient database connection management
+- **Rate Limiting**: 600 button presses/min, 1000 IMU uploads/min
 
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 80
+## 🔒 Security
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY . .
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/publish
+- All APIs (except signup/login) require JWT authentication
+- Passwords hashed with ASP.NET Core Identity
+- Refresh tokens for extended sessions (7 days)
+- Access tokens expire after 720 hours
+- Admin operations require security key
+- HTTPS enforced in production
+- SQL injection protection via parameterized queries
 
-FROM base AS final
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "IPSDataAcquisition.Presentation.dll"]
-```
+## 📝 Logging
 
-## 🔧 Development
+Logs include:
+- Request/response details
+- Database operations
+- Authentication attempts
+- Errors with full stack traces
+- Performance metrics
 
-### Adding a New Feature
-
-1. **Create Command/Query** in `Application/Features/YourFeature/Commands` or `Queries`
-2. **Create Handler** implementing `IRequestHandler<TRequest, TResponse>`
-3. **Add Validation** using FluentValidation
-4. **Add Controller** endpoint in `Presentation/Controllers`
-5. **Run migrations** if database changes are needed
-
-### Adding a Migration
-
+View logs:
 ```bash
-cd src/IPSDataAcquisition.Presentation
-dotnet ef migrations add YourMigrationName --project ../IPSDataAcquisition.Infrastructure
-dotnet ef database update --project ../IPSDataAcquisition.Infrastructure
+# Docker
+docker logs ips-data-acquisition-api -f
+
+# Local
+Check console output
 ```
 
-## 📊 Performance Considerations
+## 🐛 Troubleshooting
 
-- **IMU Data Endpoint**: High volume (~250KB payloads every 10 seconds)
-  - Uses bulk insert (`AddRangeAsync`)
-  - Consider async queue processing for scaling
-  - Enable gzip compression
-  
-- **Database**: 
-  - Indexes on `session_id`, `timestamp`, `user_id`
-  - Consider partitioning `imu_data` table by timestamp for large datasets
+### Database Connection Issues
+- Verify PostgreSQL is running
+- Check connection string in appsettings.json
+- Ensure database exists
 
-## 📖 API Documentation
+### Migration Errors
+- Ensure no pending migrations: `dotnet ef migrations list`
+- Reset database (dev only): `dotnet ef database drop`
+- Reapply migrations: `dotnet ef database update`
 
-Full API documentation is available:
-- **Swagger UI**: `https://localhost:5001/swagger`
-- **OpenAPI JSON**: `https://localhost:5001/swagger/v1/swagger.json`
+### Authentication Issues
+- Verify JWT secret key is at least 32 characters
+- Check token expiration settings
+- Ensure user account is active (`IsActive = true`)
+
+## 📚 Documentation
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design patterns
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Complete API reference
+- **[AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md)** - Production deployment guide
 
 ## 🤝 Contributing
 
-1. Create a feature branch
-2. Follow Clean Architecture principles
-3. Add FluentValidation for new commands
-4. Update documentation
+1. Follow Clean Architecture principles
+2. Use MediatR for all commands/queries
+3. Add FluentValidation for all inputs
+4. Write structured logs
+5. Keep controllers thin (routing only)
 
 ## 📄 License
 
-MIT
+[Your License Here]
 
-## 🔗 Related Projects
+## 👥 Support
 
-- **Mobile App**: `/Users/sanjeevkumar/Business/IPS/ips-data-acquisition-app` (Android)
-- **API Documentation**: See `API_DOCUMENTATION.md` in mobile app folder
-
-## 📞 Support
-
-For issues or questions, please open an issue in the repository.
+For issues or questions, please contact the development team.
 
