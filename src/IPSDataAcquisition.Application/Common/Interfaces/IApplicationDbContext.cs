@@ -10,6 +10,7 @@ public interface IApplicationDbContext
     DbSet<IMUData> IMUData { get; }
     DbSet<Bonus> Bonuses { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<AppVersion> AppVersions { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

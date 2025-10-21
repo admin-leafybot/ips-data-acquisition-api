@@ -10,11 +10,12 @@ Complete API reference for the IPS Data Acquisition API v1.
 
 1. [Authentication](#authentication)
 2. [User Management](#user-management)
-3. [Session Management](#session-management)
-4. [Button Press Tracking](#button-press-tracking)
-5. [IMU Data Upload](#imu-data-upload)
-6. [Bonus Management](#bonus-management)
-7. [Error Responses](#error-responses)
+3. [App Version Management](#app-version-management)
+4. [Session Management](#session-management)
+5. [Button Press Tracking](#button-press-tracking)
+6. [IMU Data Upload](#imu-data-upload)
+7. [Bonus Management](#bonus-management)
+8. [Error Responses](#error-responses)
 
 ---
 
@@ -241,11 +242,78 @@ Activate or deactivate a user account. **Requires admin security key**.
 
 ---
 
+## App Version Management
+
+### 5. Check App Version
+
+**POST** `/app/checkAppVersion`
+
+Check if a specific app version is active/allowed. **No authentication required** - public endpoint.
+
+**Request:**
+```json
+{
+  "versionName": "1.0.5"
+}
+```
+
+**Parameters:**
+- `versionName`: App version string (e.g., "1.0.5", "2.3.1")
+
+**Response (Version Active):**
+```json
+{
+  "isActive": true
+}
+```
+
+**Response (Version Not Active or Not Found):**
+```json
+{
+  "isActive": false
+}
+```
+
+**Status Codes:**
+- `200 OK` - Always returns 200, check `isActive` field for result
+- `400 Bad Request` - Validation error (missing version name)
+- `500 Internal Server Error` - Server error
+
+**Notes:**
+- Returns `false` if version not found in database
+- Returns `false` if version exists but `active = false`
+- Returns `true` only if version exists and `active = true`
+- Mobile app should check version on startup and prevent usage if `isActive = false`
+
+**Usage Example:**
+```bash
+curl -X POST https://api.yourdomain.com/api/v1/app/checkAppVersion \
+  -H "Content-Type: application/json" \
+  -d '{
+    "versionName": "1.0.5"
+  }'
+```
+
+**Database Management:**
+```sql
+-- Add allowed version
+INSERT INTO app_versions (version_name, active, created_at, updated_at)
+VALUES ('1.0.5', true, NOW(), NOW());
+
+-- Disable old version
+UPDATE app_versions SET active = false WHERE version_name = '1.0.3';
+
+-- View all versions
+SELECT id, version_name, active, created_at FROM app_versions ORDER BY created_at DESC;
+```
+
+---
+
 ## Session Management
 
 🔒 **Authentication Required**
 
-### 5. Create Session
+### 6. Create Session
 
 **POST** `/sessions/create`
 
@@ -303,7 +371,7 @@ Content-Type: application/json
 
 ---
 
-### 6. Close Session
+### 7. Close Session
 
 **POST** `/sessions/close`
 
@@ -358,7 +426,7 @@ Content-Type: application/json
 
 ---
 
-### 7. Cancel Session
+### 8. Cancel Session
 
 **POST** `/sessions/cancel`
 
@@ -425,7 +493,7 @@ Status: 403 Forbidden
 
 ---
 
-### 8. Get Sessions
+### 9. Get Sessions
 
 **GET** `/sessions?page=1&limit=50`
 
@@ -481,7 +549,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 🔒 **Authentication Required**
 
-### 9. Submit Button Press
+### 10. Submit Button Press
 
 **POST** `/button-presses`
 
@@ -569,7 +637,7 @@ Content-Type: application/json
 
 🔒 **Authentication Required**
 
-### 10. Upload IMU Data
+### 11. Upload IMU Data
 
 **POST** `/imu-data/upload`
 
@@ -724,7 +792,7 @@ curl -X POST https://api.yourdomain.com/api/v1/imu-data/upload \
 
 🔒 **Authentication Required**
 
-### 11. Get Bonuses
+### 12. Get Bonuses
 
 **GET** `/bonuses?start_date=2024-10-01&end_date=2024-10-31`
 

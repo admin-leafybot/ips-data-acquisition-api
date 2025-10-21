@@ -12,15 +12,18 @@ public class ChangeVerificationStatusCommandHandler : IRequestHandler<ChangeVeri
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAdminSecurityService _adminSecurityService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<ChangeVerificationStatusCommandHandler> _logger;
 
     public ChangeVerificationStatusCommandHandler(
         UserManager<ApplicationUser> userManager,
         IAdminSecurityService adminSecurityService,
+        IApplicationDbContext context,
         ILogger<ChangeVerificationStatusCommandHandler> logger)
     {
         _userManager = userManager;
         _adminSecurityService = adminSecurityService;
+        _context = context;
         _logger = logger;
     }
 
@@ -53,6 +56,29 @@ public class ChangeVerificationStatusCommandHandler : IRequestHandler<ChangeVeri
 
         if (result.Succeeded)
         {
+            // If deactivating user (status = false), revoke all refresh tokens
+            if (!request.Status)
+            {
+                var activeRefreshTokens = await _context.RefreshTokens
+                    .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                    .ToListAsync(cancellationToken);
+
+                if (activeRefreshTokens.Any())
+                {
+                    foreach (var token in activeRefreshTokens)
+                    {
+                        token.IsRevoked = true;
+                        token.RevokedAt = DateTime.UtcNow;
+                        token.UpdatedAt = DateTime.UtcNow;
+                    }
+
+                    await _context.SaveChangesAsync(cancellationToken);
+                    
+                    _logger.LogInformation("Revoked {Count} refresh tokens for deactivated user: {Phone}", 
+                        activeRefreshTokens.Count, request.Phone);
+                }
+            }
+
             var statusText = request.Status ? "activated" : "deactivated";
             _logger.LogInformation("User account {Status} for phone: {Phone}", statusText, request.Phone);
             return new ChangeVerificationStatusResponseDto(true, $"User account {statusText} successfully");

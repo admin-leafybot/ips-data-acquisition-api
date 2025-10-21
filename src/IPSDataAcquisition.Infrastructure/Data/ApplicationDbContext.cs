@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<IMUData> IMUData => Set<IMUData>();
     public DbSet<Bonus> Bonuses => Set<Bonus>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<AppVersion> AppVersions => Set<AppVersion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -131,6 +132,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // AppVersion configuration
+        modelBuilder.Entity<AppVersion>(entity =>
+        {
+            entity.ToTable("app_versions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.VersionName).HasMaxLength(50).IsRequired();
+
+            entity.HasIndex(e => e.VersionName).IsUnique();
+            entity.HasIndex(e => e.Active);
         });
     }
 
