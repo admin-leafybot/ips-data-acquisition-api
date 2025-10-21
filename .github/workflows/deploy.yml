@@ -14,6 +14,7 @@ env:
   # App settings placeholder variables → map to GitHub Secrets of the same name
   DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
   JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+  ADMIN_VERIFICATION_KEY: ${{ secrets.ADMIN_VERIFICATION_KEY }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 

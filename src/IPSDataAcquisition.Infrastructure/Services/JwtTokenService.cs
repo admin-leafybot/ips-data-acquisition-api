@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace IPSDataAcquisition.Infrastructure.Services;
@@ -17,7 +18,7 @@ public class JwtTokenService : IJwtTokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(ApplicationUser user)
+    public TokenResult GenerateToken(ApplicationUser user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
@@ -25,6 +26,9 @@ public class JwtTokenService : IJwtTokenService
 
         var key = Encoding.ASCII.GetBytes(secretKey);
         var tokenHandler = new JwtSecurityTokenHandler();
+
+        var expiresAt = DateTime.UtcNow.AddHours(expirationHours);
+        var expiresInSeconds = (int)TimeSpan.FromHours(expirationHours).TotalSeconds;
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -35,12 +39,22 @@ public class JwtTokenService : IJwtTokenService
                 new Claim(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty),
                 new Claim("FullName", user.FullName)
             }),
-            Expires = DateTime.UtcNow.AddHours(expirationHours),
+            Expires = expiresAt,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        var tokenString = tokenHandler.WriteToken(token);
+
+        return new TokenResult(tokenString, expiresAt, expiresInSeconds);
+    }
+
+    public string GenerateRefreshToken()
+    {
+        var randomBytes = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomBytes);
+        return Convert.ToBase64String(randomBytes);
     }
 }
 

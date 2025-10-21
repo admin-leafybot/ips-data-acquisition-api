@@ -9,7 +9,8 @@ public interface IApplicationDbContext
     DbSet<ButtonPress> ButtonPresses { get; }
     DbSet<IMUData> IMUData { get; }
     DbSet<Bonus> Bonuses { get; }
-
+    DbSet<RefreshToken> RefreshTokens { get; }
+    
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
 

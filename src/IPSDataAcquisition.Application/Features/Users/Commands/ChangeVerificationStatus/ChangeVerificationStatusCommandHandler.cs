@@ -1,4 +1,5 @@
 using IPSDataAcquisition.Application.Common.DTOs;
+using IPSDataAcquisition.Application.Common.Interfaces;
 using IPSDataAcquisition.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -10,19 +11,29 @@ namespace IPSDataAcquisition.Application.Features.Users.Commands.ChangeVerificat
 public class ChangeVerificationStatusCommandHandler : IRequestHandler<ChangeVerificationStatusCommand, ChangeVerificationStatusResponseDto>
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IAdminSecurityService _adminSecurityService;
     private readonly ILogger<ChangeVerificationStatusCommandHandler> _logger;
 
     public ChangeVerificationStatusCommandHandler(
         UserManager<ApplicationUser> userManager,
+        IAdminSecurityService adminSecurityService,
         ILogger<ChangeVerificationStatusCommandHandler> logger)
     {
         _userManager = userManager;
+        _adminSecurityService = adminSecurityService;
         _logger = logger;
     }
 
     public async Task<ChangeVerificationStatusResponseDto> Handle(ChangeVerificationStatusCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Change verification status request for phone: {Phone}, Status: {Status}", request.Phone, request.Status);
+
+        // Validate security key
+        if (!_adminSecurityService.ValidateChangeVerificationSecurityKey(request.SecurityKey))
+        {
+            _logger.LogWarning("Invalid security key provided for phone: {Phone}", request.Phone);
+            return new ChangeVerificationStatusResponseDto(false, "Invalid security key");
+        }
 
         // Find user by phone number
         var user = await _userManager.Users

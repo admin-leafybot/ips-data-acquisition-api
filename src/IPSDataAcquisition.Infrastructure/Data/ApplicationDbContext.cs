@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<ButtonPress> ButtonPresses => Set<ButtonPress>();
     public DbSet<IMUData> IMUData => Set<IMUData>();
     public DbSet<Bonus> Bonuses => Set<Bonus>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -111,6 +112,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
             entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Date);
+        });
+
+        // RefreshToken configuration
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.ToTable("refresh_tokens");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Token).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.UserId).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ExpiresAt);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

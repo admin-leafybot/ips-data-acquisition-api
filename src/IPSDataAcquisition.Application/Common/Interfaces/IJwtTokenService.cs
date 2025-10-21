@@ -4,6 +4,9 @@ namespace IPSDataAcquisition.Application.Common.Interfaces;
 
 public interface IJwtTokenService
 {
-    string GenerateToken(ApplicationUser user);
+    TokenResult GenerateToken(ApplicationUser user);
+    string GenerateRefreshToken();
 }
+
+public record TokenResult(string Token, DateTime ExpiresAt, int ExpiresInSeconds);
 

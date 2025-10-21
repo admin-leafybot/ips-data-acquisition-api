@@ -1,6 +1,7 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.Users.Commands.Signup;
 using IPSDataAcquisition.Application.Features.Users.Commands.Login;
+using IPSDataAcquisition.Application.Features.Users.Commands.RefreshToken;
 using IPSDataAcquisition.Application.Features.Users.Commands.ChangeVerificationStatus;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +63,30 @@ public class UserController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during login for phone: {Phone}", request.Phone);
-            return StatusCode(500, new LoginResponseDto(false, "An error occurred during login", null, null, null));
+            return StatusCode(500, new LoginResponseDto(false, "An error occurred during login", null, null, null, null, null, null));
+        }
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken(
+        [FromBody] RefreshTokenRequestDto request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new RefreshTokenCommand(request.RefreshToken);
+            var result = await _sender.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return Unauthorized(result);
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during token refresh");
+            return StatusCode(500, new RefreshTokenResponseDto(false, "An error occurred during token refresh", null, null, null, null));
         }
     }
 
@@ -72,7 +96,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var command = new ChangeVerificationStatusCommand(request.Phone, request.Status);
+            var command = new ChangeVerificationStatusCommand(request.Phone, request.Status, request.SecurityKey);
             var result = await _sender.Send(command, cancellationToken);
 
             if (!result.Success)
