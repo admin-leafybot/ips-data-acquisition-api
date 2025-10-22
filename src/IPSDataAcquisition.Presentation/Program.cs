@@ -170,6 +170,9 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Swa
 // Global exception handler - MUST be first to catch all exceptions
 app.UseGlobalExceptionHandler();
 
+// Request/Response logging - Log all API calls
+app.UseRequestResponseLogging();
+
 app.UseHttpsRedirection();
 app.UseCors();
 
