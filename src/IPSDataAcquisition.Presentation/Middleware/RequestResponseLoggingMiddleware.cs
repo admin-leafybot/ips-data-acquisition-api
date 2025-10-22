@@ -32,15 +32,14 @@ public class RequestResponseLoggingMiddleware
 
         // Capture response
         var originalBodyStream = context.Response.Body;
-        using var responseBody = new MemoryStream();
-        context.Response.Body = responseBody;
-
+        
         try
         {
+            using var responseBody = new MemoryStream();
+            context.Response.Body = responseBody;
+
             await _next(context);
-        }
-        finally
-        {
+
             stopwatch.Stop();
             
             var statusCode = context.Response.StatusCode;
@@ -48,11 +47,10 @@ public class RequestResponseLoggingMiddleware
 
             // Read response body (only for errors or if needed)
             string? responseContent = null;
-            if (statusCode >= 400)
+            if (statusCode >= 400 && responseBody.Length > 0)
             {
                 responseBody.Seek(0, SeekOrigin.Begin);
                 responseContent = await new StreamReader(responseBody).ReadToEndAsync();
-                responseBody.Seek(0, SeekOrigin.Begin);
             }
 
             // Log response
@@ -70,8 +68,19 @@ public class RequestResponseLoggingMiddleware
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 responseContent);
 
-            // Copy response back to original stream
+            // IMPORTANT: Copy response back to original stream
+            responseBody.Seek(0, SeekOrigin.Begin);
             await responseBody.CopyToAsync(originalBodyStream);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in request/response logging middleware");
+            throw;
+        }
+        finally
+        {
+            // Restore original stream
+            context.Response.Body = originalBodyStream;
         }
     }
 }
