@@ -94,7 +94,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
             entity.HasOne(e => e.Session)
                 .WithMany(s => s.IMUDataPoints)
                 .HasForeignKey(e => e.SessionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);  // Allow IMU data without session
 
             entity.HasOne<ApplicationUser>()
                 .WithMany(u => u.IMUDataRecords)
