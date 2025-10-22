@@ -7,4 +7,11 @@ services:
     ports:
       - "__APP_PORT_EXTERNAL__:5000"
     restart: unless-stopped
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "/ecs/ips-api"
+        awslogs-stream: "ips-api-container"
+        awslogs-create-group: "true"
 
