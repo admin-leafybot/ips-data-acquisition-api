@@ -28,10 +28,15 @@ public static class ButtonAction
     public const string LeftRestaurantBuilding = "LEFT_RESTAURANT_BUILDING";
     public const string ReachedSocietyGate = "REACHED_SOCIETY_GATE";
     public const string EnteredDeliveryBuilding = "ENTERED_DELIVERY_BUILDING";
+    public const string AnotherFloorInBuilding = "ANOTHER_FLOOR_IN_BUILDING";
+    public const string ExitingBuilding = "EXITING_BUILDING";
+    public const string BackToGroundFloor = "BACK_TO_GROUND_FLOOR";
+    public const string AnotherBuildingInSociety = "ANOTHER_BUILDING_IN_SOCIETY";
     public const string ReachedDeliveryCorridor = "REACHED_DELIVERY_CORRIDOR";
     public const string ReachedDoorstep = "REACHED_DOORSTEP";
     public const string LeftDoorstep = "LEFT_DOORSTEP";
     public const string GoingDownInLift = "GOING_DOWN_IN_LIFT";
+    public const string LeavingSociety = "LEAVING_SOCIETY";
     public const string LeftDeliveryBuilding = "LEFT_DELIVERY_BUILDING";
 
     public static readonly string[] ValidActions = new[]
@@ -39,8 +44,10 @@ public static class ButtonAction
         EnteredRestaurantBuilding, EnteredElevator, ClimbingStairs,
         GoingUpInLift, ReachedRestaurantCorridor, ReachedRestaurant,
         LeftRestaurant, ComingDownStairs, LeftRestaurantBuilding,
-        ReachedSocietyGate, EnteredDeliveryBuilding, ReachedDeliveryCorridor, 
-        ReachedDoorstep, LeftDoorstep, GoingDownInLift, LeftDeliveryBuilding
+        ReachedSocietyGate, EnteredDeliveryBuilding, AnotherFloorInBuilding,
+        ExitingBuilding, BackToGroundFloor, AnotherBuildingInSociety,
+        ReachedDeliveryCorridor, ReachedDoorstep, LeftDoorstep, 
+        GoingDownInLift, LeavingSociety, LeftDeliveryBuilding
     };
 }
 
