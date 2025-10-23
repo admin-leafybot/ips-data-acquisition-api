@@ -37,16 +37,100 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         {
             entity.ToTable("sessions");
             entity.HasKey(e => e.SessionId);
+            
+            // Core session properties
             entity.Property(e => e.SessionId).HasMaxLength(36);
             entity.Property(e => e.UserId).HasMaxLength(36);
             entity.Property(e => e.Status).HasMaxLength(20);
             entity.Property(e => e.PaymentStatus).HasMaxLength(20);
             entity.Property(e => e.BonusAmount).HasColumnType("decimal(10,2)");
+            
+            // Quality scoring properties
+            entity.Property(e => e.QualityScore)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Overall quality score (0-100)");
+            
+            entity.Property(e => e.QualityStatus)
+                .IsRequired()
+                .HasDefaultValue(0)
+                .HasComment("Quality check status: 0=pending, 1=completed, 2=failed");
+            
+            entity.Property(e => e.QualityCheckedAt)
+                .HasComment("Timestamp when quality check was performed");
+            
+            entity.Property(e => e.QualityRemarks)
+                .HasMaxLength(1000)
+                .HasComment("Human-readable quality issues/notes");
+            
+            // Data volume metrics
+            entity.Property(e => e.TotalIMUDataPoints)
+                .HasComment("Total number of IMU data points");
+            
+            entity.Property(e => e.TotalButtonPresses)
+                .HasComment("Total number of button press events");
+            
+            entity.Property(e => e.DurationMinutes)
+                .HasColumnType("double precision")
+                .HasComment("Session duration in minutes");
+            
+            // Sensor coverage percentages
+            entity.Property(e => e.AccelDataCoverage)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Percentage of records with accelerometer data (0-100)");
+            
+            entity.Property(e => e.GyroDataCoverage)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Percentage of records with gyroscope data (0-100)");
+            
+            entity.Property(e => e.MagDataCoverage)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Percentage of records with magnetometer data (0-100)");
+            
+            entity.Property(e => e.GpsDataCoverage)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Percentage of records with GPS data (0-100)");
+            
+            entity.Property(e => e.BarometerDataCoverage)
+                .HasColumnType("decimal(5,2)")
+                .HasComment("Percentage of records with barometer/pressure data (0-100)");
+            
+            // Quality flags
+            entity.Property(e => e.HasAnomalies)
+                .IsRequired()
+                .HasDefaultValue(false)
+                .HasComment("Flag indicating if sensor anomalies were detected");
+            
+            entity.Property(e => e.HasDataGaps)
+                .IsRequired()
+                .HasDefaultValue(false)
+                .HasComment("Flag indicating if data gaps were detected");
+            
+            entity.Property(e => e.DataGapCount)
+                .IsRequired()
+                .HasDefaultValue(0)
+                .HasComment("Number of data gaps detected (>1 second)");
+            
+            // Flexible JSON storage
+            entity.Property(e => e.QualityMetricsRawJson)
+                .HasColumnType("jsonb")
+                .HasComment("Extended quality metrics and ML features in JSON format");
 
+            // Indexes
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.StartTimestamp);
+            
+            // Quality check indexes
+            entity.HasIndex(e => e.QualityStatus)
+                .HasDatabaseName("idx_sessions_quality_status");
+            
+            entity.HasIndex(e => e.QualityScore)
+                .HasDatabaseName("idx_sessions_quality_score");
+            
+            entity.HasIndex(e => new { e.QualityScore, e.HasAnomalies, e.Status })
+                .HasDatabaseName("idx_sessions_quality_analysis");
 
+            // Relationships
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Sessions)
                 .HasForeignKey(e => e.UserId)
