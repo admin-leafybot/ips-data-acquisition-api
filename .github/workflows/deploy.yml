@@ -33,30 +33,60 @@ jobs:
 
       - name: Replace placeholders in appsettings files with secrets
         run: |
-          set -euo pipefail
-          files=(
-            "src/IPSDataAcquisition.Presentation/appsettings.json"
-            "src/IPSDataAcquisition.Presentation/appsettings.Production.json"
-          )
-          for f in "${files[@]}"; do
-            [ -f "$f" ] || continue
-            echo "Processing $f"
-            # Find tokens like __NAME__
-            mapfile -t tokens < <(grep -oE '"__([A-Z0-9_]+)__"' "$f" | tr -d '"' | sort -u || true)
-            for t in "${tokens[@]}"; do
-              name=${t#__}; name=${name%__}
-              val=${!name-}
-              if [ -z "${val:-}" ]; then
-                echo "Warning: no value found for $t (env $name). Leaving placeholder as-is." >&2
-                continue
-              fi
-              # Escape replacement safely for sed
-              esc=$(printf '%s' "$val" | sed -e 's/[\/&]/\\&/g')
-              sed -i.bak -e "s#\"${t}\"#\"${esc}\"#g" "$f"
-            done
-          done
-          echo "Preview of updated appsettings.Production.json:"
-          head -n 200 src/IPSDataAcquisition.Presentation/appsettings.Production.json || true
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import re
+          import json
+          
+          files = [
+              "src/IPSDataAcquisition.Presentation/appsettings.json",
+              "src/IPSDataAcquisition.Presentation/appsettings.Production.json"
+          ]
+          
+          # Environment variables mapping
+          replacements = {
+              "__DB_CONNECTION_STRING__": os.environ.get("DB_CONNECTION_STRING", ""),
+              "__JWT_SECRET_KEY__": os.environ.get("JWT_SECRET_KEY", ""),
+              "__ADMIN_VERIFICATION_KEY__": os.environ.get("ADMIN_VERIFICATION_KEY", ""),
+              "__RABBITMQ_HOST__": os.environ.get("RABBITMQ_HOST", ""),
+              "__RABBITMQ_USER__": os.environ.get("RABBITMQ_USER", ""),
+              "__RABBITMQ_PASSWORD__": os.environ.get("RABBITMQ_PASSWORD", "")
+          }
+          
+          for filepath in files:
+              if not os.path.exists(filepath):
+                  continue
+              
+              print(f"Processing {filepath}")
+              
+              with open(filepath, 'r') as f:
+                  content = f.read()
+              
+              # Replace each placeholder
+              for placeholder, value in replacements.items():
+                  if not value:
+                      print(f"Warning: No value for {placeholder}, leaving as-is")
+                      continue
+                  
+                  # Simple string replacement (much safer than sed with special chars)
+                  content = content.replace(f'"{placeholder}"', f'"{value}"')
+              
+              # Write back
+              with open(filepath, 'w') as f:
+                  f.write(content)
+              
+              print(f"✓ Updated {filepath}")
+          
+          # Preview the production file
+          print("\n=== Preview of appsettings.Production.json ===")
+          with open("src/IPSDataAcquisition.Presentation/appsettings.Production.json", 'r') as f:
+              lines = f.readlines()[:50]  # First 50 lines
+              for i, line in enumerate(lines, 1):
+                  # Mask sensitive values in preview
+                  masked = re.sub(r'("(?:Password|Key|ConnectionString)"\s*:\s*")([^"]+)(")', r'\1***MASKED***\3', line)
+                  print(f"{i:3d}: {masked}", end='')
+          
+          PYTHON_SCRIPT
         shell: bash
 
       - name: Set up Docker Buildx
