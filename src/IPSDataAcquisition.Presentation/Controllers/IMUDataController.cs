@@ -1,5 +1,6 @@
 using IPSDataAcquisition.Application.Common.DTOs;
 using IPSDataAcquisition.Application.Features.IMUData.Commands.UploadIMUData;
+using IPSDataAcquisition.Application.Features.IMUData.Commands.PublishIMUDataToQueue;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,13 @@ namespace IPSDataAcquisition.Presentation.Controllers;
 public class IMUDataController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<IMUDataController> _logger;
 
-    public IMUDataController(ISender sender, ILogger<IMUDataController> logger)
+    public IMUDataController(ISender sender, IConfiguration configuration, ILogger<IMUDataController> logger)
     {
         _sender = sender;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -55,11 +58,26 @@ public class IMUDataController : ControllerBase
                 "First IMU point - Timestamp: {Timestamp}, AccelX: {AccelX}, GyroX: {GyroX}, MagX: {MagX}",
                 firstPoint.Timestamp, firstPoint.AccelX, firstPoint.GyroX, firstPoint.MagX);
 
-            var result = await _sender.Send(
-                new UploadIMUDataCommand(request.SessionId, request.DataPoints),
-                cancellationToken);
+            // Check feature flag to determine processing mode
+            var useRabbitMQ = _configuration.GetValue<bool>("FeatureFlags:UseRabbitMQForIMUData", true);
+            
+            UploadIMUDataResponseDto result;
+            if (useRabbitMQ)
+            {
+                _logger.LogInformation("Using RabbitMQ for IMU data processing");
+                result = await _sender.Send(
+                    new PublishIMUDataToQueueCommand(request.SessionId, request.DataPoints),
+                    cancellationToken);
+            }
+            else
+            {
+                _logger.LogInformation("Using direct DB save for IMU data processing");
+                result = await _sender.Send(
+                    new UploadIMUDataCommand(request.SessionId, request.DataPoints),
+                    cancellationToken);
+            }
 
-            _logger.LogInformation("IMU data upload SUCCESS - {Count} points saved for session {SessionId}", 
+            _logger.LogInformation("IMU data upload SUCCESS - {Count} points processed for session {SessionId}", 
                 result.PointsReceived, result.SessionId ?? "null");
 
             return Ok(new ApiResponse<UploadIMUDataResponseDto>

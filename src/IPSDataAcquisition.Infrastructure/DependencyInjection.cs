@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAdminSecurityService, AdminSecurityService>();
+        services.AddSingleton<IMessageQueueService, RabbitMqService>();
 
         return services;
     }
